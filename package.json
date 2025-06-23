@@ -1,0 +1,77 @@
+{
+  "name": "solid-mode-watcher",
+  "type": "module",
+  "version": "0.0.1",
+  "private": false,
+  "packageManager": "bun@1.2.4",
+  "description": "Mode Watcher for Solid.js applications",
+  "author": "pekochan069",
+  "contributors": [],
+  "license": "MIT",
+  "homepage": "https://github.com/pekochan069/solid-mode-watcher#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pekochan069/solid-mode-watcher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pekochan069/solid-mode-watcher/issues"
+  },
+  "keywords": [
+    "solid"
+  ],
+  "sideEffects": false,
+  "exports": {
+    "solid": {
+      "development": "./dist/dev.jsx",
+      "import": "./dist/index.jsx"
+    },
+    "development": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/dev.js"
+      }
+    },
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {},
+  "files": [
+    "dist"
+  ],
+  "browser": {},
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vite serve dev",
+    "build": "tsup",
+    "prepublishOnly": "bun build",
+    "lint": "eslint --max-warnings 0 --fix ./src"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.6.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.16.1",
+    "@tailwindcss/vite": "^4.1.10",
+    "@types/node": "^24.0.3",
+    "concurrently": "^9.2.0",
+    "esbuild": "^0.25.5",
+    "esbuild-plugin-solid": "^0.6.0",
+    "eslint": "^9.29.0",
+    "eslint-plugin-solid": "^0.14.5",
+    "jsdom": "^26.1.0",
+    "solid-js": "^1.9.7",
+    "tailwindcss": "^4.1.10",
+    "tsup": "^8.5.0",
+    "tsup-preset-solid": "^2.2.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-solid": "^2.11.6"
+  }
+}
