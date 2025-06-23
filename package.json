@@ -51,7 +51,8 @@
     "dev": "vite serve dev",
     "build": "tsup",
     "prepublishOnly": "bun build",
-    "lint": "eslint --max-warnings 0 --fix ./src"
+    "lint": "eslint --max-warnings 0 --fix ./src",
+    "publish:prepare": "bun run build && bun pm pack --destination ./publish"
   },
   "peerDependencies": {
     "solid-js": "^1.6.0"

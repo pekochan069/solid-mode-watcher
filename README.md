@@ -29,7 +29,7 @@ bun add solid-mode-watcher
 Add the `ModeWatcher` component to the root of your App:
 
 ```tsx
-import ModeWatcher from 'solid-mode-watcher'
+import { ModeWatcher } from 'solid-mode-watcher'
 
 function App() {
   return (
@@ -54,7 +54,7 @@ To set default mode, use the `defaultMode` property:
 A function that toggles the current mode.
 
 ```tsx
-import { toggleMode } from "solid-mode-watcher";
+import { toggleMode } from 'solid-mode-watcher'
 
 <button onClick={toggleMode}>Toggle Mode</button>
 ```
@@ -76,7 +76,7 @@ import { setMode } from "solid-mode-watcher";
 A function that sets the current mode to the system preference.
 
 ```tsx
-import { setSystemMode } from "solid-mode-watcher";
+import { setSystemMode } from 'solid-mode-watcher'
 
 <button onClick={setSystemMode}>System Mode</button>
 ```
@@ -86,7 +86,7 @@ import { setSystemMode } from "solid-mode-watcher";
 A function that resets the mode to the default mode.
 
 ```tsx
-import { resetMode } from "solid-mode-watcher";
+import { resetMode } from 'solid-mode-watcher'
 
 <button onClick={resetMode}>Reset Mode</button>
 ```
