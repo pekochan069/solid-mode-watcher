@@ -113,4 +113,4 @@ function setSystemMode() {
   setMode(systemMode);
 }
 
-export { defaultMode, mode, ModeWatcher, resetMode, setMode, setSystemMode, toggleMode };
+export { type Mode, defaultMode, mode, ModeWatcher, resetMode, setMode, setSystemMode, toggleMode };
