@@ -1,0 +1,14 @@
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc,astro,css,yaml,yml}"
+      run: bun run oxfmt {staged_files}
+      stage_fixed: true
+pre-push:
+  parallel: true
+  commands:
+    check-types:
+      run: bun run tsc --noEmit
+    lint:
+      run: bun run lint
