@@ -94,3 +94,7 @@ import { resetMode } from "solid-mode-watcher";
 ### mode, defaultMode
 
 Accessors to mode and defaultMode signals.
+
+### Mode
+
+Type of `mode`
