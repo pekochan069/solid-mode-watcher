@@ -1,5 +1,13 @@
 import type { Component } from "solid-js";
-import { defaultMode, mode, ModeWatcher, resetMode, setMode, setSystemMode, toggleMode } from "src";
+import {
+  defaultMode,
+  mode,
+  ModeWatcher,
+  resetMode,
+  setMode,
+  setSystemMode,
+  toggleMode,
+} from "../src";
 
 const App: Component = () => {
   return (

@@ -1,4 +1,4 @@
-import { createEffect, createSignal, mergeProps, onMount } from "solid-js";
+import { createEffect, createSignal, merge, onSettled } from "solid-js";
 
 type Mode = "dark" | "light" | "system";
 
@@ -46,18 +46,18 @@ interface ModeWatcherProps {
 }
 
 function ModeWatcher(props: ModeWatcherProps) {
-  const merged = mergeProps(
+  const merged = merge(
     {
       defaultMode: "system" as Mode,
       darkClassList: ["dark"],
       lightClassList: ["light"],
       modeStorageKey: "ui-mode",
       scriptId: "ui-mode-script",
-    },
+    } satisfies Partial<ModeWatcherProps>,
     props,
   );
 
-  onMount(() => {
+  onSettled(() => {
     setDefaultMode(merged.defaultMode);
 
     const mode =
@@ -65,25 +65,26 @@ function ModeWatcher(props: ModeWatcherProps) {
     setMode(mode);
   });
 
-  createEffect(() => {
-    const currentMode = mode();
+  createEffect(
+    () => mode(),
+    (theme) => {
+      if (theme === undefined) return;
 
-    if (currentMode === undefined) return;
+      const isDarkMode = theme === "dark";
 
-    const isDarkMode = currentMode === "dark";
+      if (!isDarkMode) {
+        document.documentElement.classList.remove(...merged.darkClassList);
+        document.documentElement.classList.add(...merged.lightClassList);
+      } else {
+        document.documentElement.classList.remove(...merged.lightClassList);
+        document.documentElement.classList.add(...merged.darkClassList);
+      }
 
-    if (!isDarkMode) {
-      document.documentElement.classList.remove(...merged.darkClassList);
-      document.documentElement.classList.add(...merged.lightClassList);
-    } else {
-      document.documentElement.classList.remove(...merged.lightClassList);
-      document.documentElement.classList.add(...merged.darkClassList);
-    }
+      document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
 
-    document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
-
-    localStorage.setItem(merged.modeStorageKey, currentMode);
-  });
+      localStorage.setItem(merged.modeStorageKey, theme);
+    },
+  );
 
   return (
     <>

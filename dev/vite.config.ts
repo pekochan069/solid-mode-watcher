@@ -1,17 +1,13 @@
-import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import solidPlugin from "vite-plugin-solid";
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      src: path.resolve(__dirname, "../src"),
-    },
-  },
   plugins: [
     tailwindcss(),
-    solidPlugin(),
+    solidPlugin({
+      compiler: "native",
+    }),
     {
       name: "Reaplace env variables",
       transform(code, id) {
