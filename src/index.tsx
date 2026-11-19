@@ -1,17 +1,19 @@
 import { createEffect, createSignal, merge, onSettled } from "solid-js";
+import {
+  applyMode,
+  createModeScript,
+  type Mode,
+  type ModeOptions,
+  type ThemeDefinition,
+} from "./theme";
 
-type Mode = "dark" | "light" | "system";
-
-const [defaultMode, setDefaultMode] = createSignal<Mode>("system");
-const [mode, setMode] = createSignal<Mode>("system");
-
-interface ModeWatcherProps {
+interface ModeWatcherProps<CustomMode extends string = never> {
   /**
-   * The default mode to use instead of the user"s preference.
+   * The mode to use when no registered mode is stored.
    *
    * @defaultValue `"system"`
    */
-  defaultMode?: Mode;
+  defaultMode?: Mode<CustomMode>;
   /**
    * The classname to add to the root `html` element when the mode is dark.
    *
@@ -45,73 +47,119 @@ interface ModeWatcherProps {
   scriptId?: string;
 }
 
-function ModeWatcher(props: ModeWatcherProps) {
-  const merged = merge(
-    {
-      defaultMode: "system" as Mode,
-      darkClassList: ["dark"],
-      lightClassList: ["light"],
-      modeStorageKey: "ui-mode",
-      scriptId: "ui-mode-script",
-    } satisfies Partial<ModeWatcherProps>,
-    props,
-  );
-
-  onSettled(() => {
-    setDefaultMode(merged.defaultMode);
-
-    const mode =
-      (localStorage.getItem(merged.modeStorageKey) as Mode | undefined) || merged.defaultMode;
-    setMode(mode);
-  });
-
-  createEffect(
-    () => mode(),
-    (theme) => {
-      if (theme === undefined) return;
-
-      const isDarkMode = theme === "dark";
-
-      if (!isDarkMode) {
-        document.documentElement.classList.remove(...merged.darkClassList);
-        document.documentElement.classList.add(...merged.lightClassList);
-      } else {
-        document.documentElement.classList.remove(...merged.lightClassList);
-        document.documentElement.classList.add(...merged.darkClassList);
-      }
-
-      document.documentElement.style.colorScheme = isDarkMode ? "dark" : "light";
-
-      localStorage.setItem(merged.modeStorageKey, theme);
-    },
-  );
-
-  return (
-    <>
-      <script
-        id={merged.scriptId}
-        nonce={merged.nonce}
-        // eslint-disable-next-line solid/no-innerhtml
-        innerHTML={`const mode=(localStorage.getItem(${merged.modeStorageKey}))||${merged.defaultMode};const isDarkMode=window.matchMedia("(prefers-color-scheme: dark)").matches;if(!isDarkMode){document.documentElement.classList.remove(...${merged.darkClassList});document.documentElement.classList.add(...${merged.lightClassList});}else{document.documentElement.classList.remove(...${merged.lightClassList});document.documentElement.classList.add(...${merged.darkClassList});}document.documentElement.style.colorScheme=isDarkMode?"dark":"light";localStorage.setItem("${merged.modeStorageKey}",mode);`}
-      />
-    </>
-  );
+interface CreateModeWatcherOptions<Themes extends Record<string, ThemeDefinition>> {
+  /** Registered themes with literal names. The name `system` is reserved. */
+  themes: Themes & { system?: never } & (string extends keyof Themes ? never : unknown);
+  defaultMode?: NoInfer<Mode<Extract<keyof Themes, string>>>;
 }
 
-function toggleMode() {
-  setMode((prev) => (prev === "dark" ? "light" : "dark"));
+function createModeWatcher<const Themes extends Record<string, ThemeDefinition>>(
+  config: CreateModeWatcherOptions<Themes>,
+) {
+  type CustomMode = Extract<keyof Themes, string>;
+  const initialMode: Mode<CustomMode> = config.defaultMode ?? "system";
+  const [defaultMode, setDefaultMode] = createSignal<Mode<CustomMode>>(() => initialMode);
+  const [mode, setMode] = createSignal<Mode<CustomMode>>(() => initialMode);
+
+  function ModeWatcher(props: ModeWatcherProps<CustomMode>) {
+    const merged = merge(
+      {
+        defaultMode: initialMode,
+        darkClassList: ["dark"],
+        lightClassList: ["light"],
+        modeStorageKey: "ui-mode",
+        scriptId: "ui-mode-script",
+      } satisfies Partial<ModeWatcherProps<CustomMode>>,
+      props,
+    );
+    const options: ModeOptions<CustomMode> = {
+      defaultMode: merged.defaultMode,
+      modeStorageKey: merged.modeStorageKey,
+      themes: {
+        light: { classList: merged.lightClassList, colorScheme: "light" },
+        dark: { classList: merged.darkClassList, colorScheme: "dark" },
+        ...config.themes,
+      },
+    };
+
+    if (Object.hasOwn(options.themes, "system")) {
+      throw new Error('The theme name "system" is reserved for the operating system preference.');
+    }
+    if (options.defaultMode !== "system" && !Object.hasOwn(options.themes, options.defaultMode)) {
+      throw new Error(`The default mode "${options.defaultMode}" is not a registered theme.`);
+    }
+
+    const [initialized, setInitialized] = createSignal(false);
+
+    onSettled(() => {
+      if (typeof window === "undefined") return;
+
+      setDefaultMode(() => options.defaultMode);
+      setMode(() => applyMode(options));
+      setInitialized(true);
+
+      const media = window.matchMedia("(prefers-color-scheme: dark)");
+      const updateSystemMode = () => {
+        if (mode() === "system") applyMode(options, "system");
+      };
+
+      media.addEventListener("change", updateSystemMode);
+      return () => media.removeEventListener("change", updateSystemMode);
+    });
+
+    createEffect(
+      () => (initialized() ? mode() : undefined),
+      (theme) => {
+        if (theme === undefined) return;
+        setMode(() => applyMode(options, theme));
+      },
+    );
+
+    return (
+      <>
+        <script
+          id={merged.scriptId}
+          nonce={merged.nonce}
+          // eslint-disable-next-line solid/no-innerhtml
+          innerHTML={createModeScript(options)}
+        />
+      </>
+    );
+  }
+
+  function toggleMode() {
+    setMode((prev) => (prev === "dark" ? "light" : "dark"));
+  }
+
+  function resetMode() {
+    setMode(() => defaultMode());
+  }
+
+  function setSystemMode() {
+    if (typeof window === "undefined") return "light";
+
+    const systemMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
+    setMode(systemMode);
+  }
+
+  return { defaultMode, mode, ModeWatcher, resetMode, setMode, setSystemMode, toggleMode };
 }
 
-function resetMode() {
-  setMode(defaultMode());
-}
+const { defaultMode, mode, ModeWatcher, resetMode, setMode, setSystemMode, toggleMode } =
+  createModeWatcher({ themes: {} });
 
-function setSystemMode() {
-  if (typeof window === "undefined") return "light";
-
-  const systemMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-
-  setMode(systemMode);
-}
-
-export { type Mode, defaultMode, mode, ModeWatcher, resetMode, setMode, setSystemMode, toggleMode };
+export {
+  type CreateModeWatcherOptions,
+  type Mode,
+  type ModeWatcherProps,
+  type ThemeDefinition,
+  createModeWatcher,
+  defaultMode,
+  mode,
+  ModeWatcher,
+  resetMode,
+  setMode,
+  setSystemMode,
+  toggleMode,
+};

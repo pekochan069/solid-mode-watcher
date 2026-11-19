@@ -1,5 +1,5 @@
 import { defineConfig, type UserConfig } from "tsdown";
-import solid from "vite-plugin-solid";
+import { solid } from "rolldown-plugin-solid-compiler";
 
 const entry = { index: "./src/index.tsx" };
 

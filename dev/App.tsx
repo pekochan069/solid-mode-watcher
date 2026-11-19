@@ -1,18 +1,16 @@
 import type { Component } from "solid-js";
-import {
-  defaultMode,
-  mode,
-  ModeWatcher,
-  resetMode,
-  setMode,
-  setSystemMode,
-  toggleMode,
-} from "../src";
+import { createModeWatcher } from "../src";
+
+const { defaultMode, mode, ModeWatcher, resetMode, setMode, setSystemMode, toggleMode } =
+  createModeWatcher({
+    defaultMode: "dark",
+    themes: { sepia: { classList: ["sepia"], colorScheme: "light" } },
+  });
 
 const App: Component = () => {
   return (
     <>
-      <div class="h-24 w-24 bg-black dark:bg-white" />
+      <div class="theme-swatch h-24 w-24" />
       <div class="flex flex-col items-start">
         <button
           onClick={toggleMode}
@@ -39,6 +37,12 @@ const App: Component = () => {
           Dark Mode
         </button>
         <button
+          onClick={() => setMode("sepia")}
+          class="rounded-md bg-blue-500 p-2 text-white hover:bg-blue-400 active:bg-blue-600"
+        >
+          Sepia Mode
+        </button>
+        <button
           onClick={resetMode}
           class="rounded-md bg-blue-500 p-2 text-white hover:bg-blue-400 active:bg-blue-600"
         >
@@ -53,7 +57,7 @@ const App: Component = () => {
       </div>
       <p>current mode: {mode()}</p>
       <p>default mode: {defaultMode()}</p>
-      <ModeWatcher defaultMode="dark" />
+      <ModeWatcher />
     </>
   );
 };
